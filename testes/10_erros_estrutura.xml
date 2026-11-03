@@ -1,0 +1,7 @@
+<telemetria>
+<leitura><sensor>TEMP_01</sensor><valor>24.5</valor><unidade>CELSIUS</unidade>
+<leitura><sensor>TEMP_01</sensor><valor>24.5</valor></leitura>
+<leitura><sensor>TEMP_01<valor>24.5</valor><unidade>CELSIUS</unidade></leitura>
+<leitura id="3"><sensor>TEMP_01</sensor><valor>24.5</valor><unidade>CELSIUS</unidade></leitura>
+<leitura><sensor>TEMP_01</sensor><valor>24.5</valor><unidade>CELSIUS</unidade></leitura>
+</telemetria>

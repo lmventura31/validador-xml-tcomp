@@ -1,0 +1,7 @@
+Erro de validação na linha 1: Tipo de dados inválido em <leitura><sensor>TEMP_1</sensor><valor>10</valor><unidade>CELSIUS</unidade></leitura>.
+Erro de validação na linha 2: Tipo de dados inválido em <leitura><sensor>TEMP_01</sensor><valor>0.00</valor><unidade>CELSIUS</unidade></leitura>.
+Erro de validação na linha 3: Tipo de dados inválido em <leitura><sensor>TEMP_01</sensor><valor>1.234</valor><unidade>CELSIUS</unidade></leitura>.
+Erro de validação na linha 4: Tipo de dados inválido em <leitura><sensor>TEMP_01</sensor><valor>0.01</valor><unidade>KELVIN</unidade></leitura>.
+Erro de validação na linha 5: Tipo de dados inválido em <leitura><sensor>TEMP_01</sensor><valor></valor><unidade>CELSIUS</unidade></leitura>.
+Erro de validação na linha 6: Estrutura inválida em <leitura><valor>5</valor><sensor>TEMP_01</sensor><unidade>CELSIUS</unidade></leitura>.
+Erro de validação na linha 7: Estrutura inválida em <leitura><sensor>TEMP_01</sensor><valor>5</valor><unidade>CELSIUS</unidade><extra>x</extra></leitura>.

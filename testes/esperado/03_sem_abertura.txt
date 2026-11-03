@@ -1,0 +1,1 @@
+Erro sintático: Elemento <telemetria> não foi aberto.

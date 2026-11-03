@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><structure><type>fa</type><automaton>
+<state id="0" name="0"><x>60</x><y>200</y><initial/></state>
+<state id="1" name="1"><x>150</x><y>80</y></state>
+<state id="2" name="2"><x>240</x><y>80</y></state>
+<state id="3" name="3"><x>330</x><y>80</y></state>
+<state id="4" name="4"><x>420</x><y>80</y></state>
+<state id="5" name="5"><x>510</x><y>80</y></state>
+<state id="6" name="6"><x>600</x><y>80</y></state>
+<state id="7" name="7"><x>690</x><y>80</y><final/></state>
+<state id="8" name="8"><x>150</x><y>320</y></state>
+<state id="9" name="9"><x>240</x><y>320</y></state>
+<state id="10" name="10"><x>330</x><y>320</y></state>
+<state id="11" name="11"><x>420</x><y>320</y></state>
+<state id="12" name="12"><x>510</x><y>320</y></state>
+<state id="13" name="13"><x>600</x><y>320</y></state>
+<state id="14" name="14"><x>690</x><y>320</y></state>
+<state id="15" name="15"><x>780</x><y>320</y></state>
+<state id="16" name="16"><x>870</x><y>320</y></state>
+<state id="17" name="17"><x>960</x><y>320</y><final/></state>
+<transition><from>0</from><to>1</to><read>C</read></transition>
+<transition><from>1</from><to>2</to><read>E</read></transition>
+<transition><from>2</from><to>3</to><read>L</read></transition>
+<transition><from>3</from><to>4</to><read>S</read></transition>
+<transition><from>4</from><to>5</to><read>I</read></transition>
+<transition><from>5</from><to>6</to><read>U</read></transition>
+<transition><from>6</from><to>7</to><read>S</read></transition>
+<transition><from>0</from><to>8</to><read>P</read></transition>
+<transition><from>8</from><to>9</to><read>E</read></transition>
+<transition><from>9</from><to>10</to><read>R</read></transition>
+<transition><from>10</from><to>11</to><read>C</read></transition>
+<transition><from>11</from><to>12</to><read>E</read></transition>
+<transition><from>12</from><to>13</to><read>N</read></transition>
+<transition><from>13</from><to>14</to><read>T</read></transition>
+<transition><from>14</from><to>15</to><read>U</read></transition>
+<transition><from>15</from><to>16</to><read>A</read></transition>
+<transition><from>16</from><to>17</to><read>L</read></transition>
+</automaton></structure>

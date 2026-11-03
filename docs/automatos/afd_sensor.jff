@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><structure><type>fa</type><automaton>
+<state id="0" name="0"><x>60</x><y>150</y><initial/></state>
+<state id="1" name="1"><x>160</x><y>150</y></state>
+<state id="2" name="2"><x>260</x><y>150</y></state>
+<state id="3" name="3"><x>360</x><y>150</y></state>
+<state id="4" name="4"><x>460</x><y>150</y></state>
+<state id="5" name="5"><x>560</x><y>150</y></state>
+<state id="6" name="6"><x>660</x><y>150</y></state>
+<state id="7" name="7"><x>760</x><y>150</y><final/></state>
+<transition><from>0</from><to>1</to><read>c</read></transition>
+<transition><from>1</from><to>2</to><read>c</read></transition>
+<transition><from>2</from><to>3</to><read>c</read></transition>
+<transition><from>3</from><to>4</to><read>c</read></transition>
+<transition><from>4</from><to>5</to><read>c</read></transition>
+<transition><from>5</from><to>6</to><read>c</read></transition>
+<transition><from>6</from><to>7</to><read>c</read></transition>
+</automaton></structure>
