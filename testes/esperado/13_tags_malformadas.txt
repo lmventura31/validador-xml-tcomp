@@ -1,0 +1,4 @@
+Erro de validação na linha 1: Estrutura inválida em < leitura><sensor>TEMP_01</sensor><valor>24.5</valor><unidade>CELSIUS</unidade></leitura>.
+Erro de validação na linha 2: Estrutura inválida em <leitura><sensor>TEMP_01</ sensor><valor>24.5</valor><unidade>CELSIUS</unidade></leitura>.
+Erro de validação na linha 3: Estrutura inválida em <leitura><sensor>TEMP_01</sensor><valor/><unidade>CELSIUS</unidade></leitura>.
+Erro de validação na linha 4: Estrutura inválida em <leitura><SENSOR>TEMP_01</SENSOR><valor>24.5</valor><unidade>CELSIUS</unidade></leitura>.

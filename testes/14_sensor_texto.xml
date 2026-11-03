@@ -1,0 +1,9 @@
+<telemetria>
+<leitura><sensor>1234567</sensor><valor>10</valor><unidade>CELSIUS</unidade></leitura>
+<leitura><sensor>_______</sensor><valor>10</valor><unidade>CELSIUS</unidade></leitura>
+<leitura><sensor>TEMP-01</sensor><valor>10</valor><unidade>CELSIUS</unidade></leitura>
+<leitura><sensor>TEMP_001</sensor><valor>10</valor><unidade>CELSIUS</unidade></leitura>
+<leitura><sensor>temp_01</sensor><valor>10</valor><unidade>celsius</unidade></leitura>
+<leitura><sensor>A123456</sensor><valor>10</valor><unidade>CELSIUS</unidade></leitura>
+<leitura><sensor>1_2345X</sensor><valor>0.1</valor><unidade>PERCENTUAL</unidade></leitura>
+</telemetria>

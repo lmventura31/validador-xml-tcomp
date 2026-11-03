@@ -1,0 +1,6 @@
+<telemetria>
+<leitura><sensor>TEMP_01</sensor><valor>24.5</valor><unidade>CELSIUS</unidade></leitura>
+</telemetria>
+<telemetria>
+<leitura><sensor>UMID_02</sensor><valor>60</valor><unidade>PERCENTUAL</unidade></leitura>
+</telemetria>

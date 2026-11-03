@@ -1,0 +1,1 @@
+Erro sintático: Conteúdo fora do elemento <telemetria> em <leitura><sensor>UMID_02</sensor><valor>60</valor><unidade>PERCENTUAL</unidade></leitura>.

@@ -1,0 +1,2 @@
+Erro sintático: Elemento <telemetria> repetido em </telemetria>.
+Erro sintático: Elemento <telemetria> repetido em <telemetria>.
