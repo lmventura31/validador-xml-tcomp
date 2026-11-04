@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?><structure><type>fa</type><automaton>
 <state id="0" name="q0"><x>60</x><y>200</y><initial/></state>
-<state id="1" name="q1"><x>160</x><y>200</y></state>
-<state id="2" name="q2"><x>260</x><y>200</y></state>
-<state id="3" name="q3"><x>360</x><y>80</y></state>
-<state id="4" name="q4"><x>460</x><y>200</y></state>
-<state id="5" name="q5"><x>560</x><y>200</y></state>
-<state id="6" name="q6"><x>660</x><y>80</y></state>
-<state id="7" name="q7"><x>760</x><y>200</y></state>
-<state id="8" name="q8"><x>860</x><y>200</y></state>
-<state id="9" name="q9"><x>960</x><y>80</y></state>
-<state id="10" name="q10"><x>1060</x><y>200</y></state>
-<state id="11" name="q11"><x>1160</x><y>200</y><final/></state>
+<state id="1" name="q1"><x>185</x><y>200</y></state>
+<state id="2" name="q2"><x>310</x><y>200</y></state>
+<state id="3" name="q3"><x>435</x><y>80</y></state>
+<state id="4" name="q4"><x>560</x><y>200</y></state>
+<state id="5" name="q5"><x>685</x><y>200</y></state>
+<state id="6" name="q6"><x>810</x><y>80</y></state>
+<state id="7" name="q7"><x>935</x><y>200</y></state>
+<state id="8" name="q8"><x>1060</x><y>200</y></state>
+<state id="9" name="q9"><x>1185</x><y>80</y></state>
+<state id="10" name="q10"><x>1310</x><y>200</y></state>
+<state id="11" name="q11"><x>1435</x><y>200</y><final/></state>
 <transition><from>0</from><to>1</to><read>L</read></transition>
 <transition><from>1</from><to>2</to><read>S</read></transition>
 <transition><from>2</from><to>3</to><read>t</read></transition>

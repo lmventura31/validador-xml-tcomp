@@ -6,16 +6,51 @@ Grupo 04 - Validador de Estrutura XML Plana (telemetria de sensores)
 Abordagem:
   1. Análise léxica: o arquivo inteiro vira uma sequência de tokens (tag de
      abertura, tag de fechamento, texto). Quebras de linha não importam.
-  2. Análise estrutural: a sequência é dividida em blocos <leitura> e um
-     AFD (autômato finito determinístico) reconhece cada bloco válido.
-  3. Validação de tipos: cada conteúdo é testado por um AFD próprio
+     O nome de cada tag é reconhecido por um AFD.
+  2. Elemento raiz: a sequência de tokens deve ter a forma
+     <telemetria> X* </telemetria>, em que X é qualquer outro token.
+  3. Análise estrutural: o conteúdo da raiz é dividido em blocos <leitura>
+     e um AFD (autômato finito determinístico) reconhece cada bloco válido.
+  4. Validação de tipos: cada conteúdo é testado por um AFD próprio
      (sensor, valor, unidade).
 
 Uso:
-    python validador.py arquivo.xml
+    python validador.py [--detalhes] arquivo.xml
+
+Com --detalhes, cada erro vem acompanhado da linha do arquivo e do ponto
+em que o AFD rejeitou a entrada.
 """
 
 import sys
+
+# ---------------------------------------------------------------------------
+# 0. EXECUÇÃO DE UM AFD
+# ---------------------------------------------------------------------------
+# Cada AFD é a quíntupla (Q, Σ, δ, q0, F) representada por:
+#   delta     -> dicionário {(estado, símbolo): próximo estado}
+#   inicial   -> q0
+#   aceitacao -> F
+#   classe    -> função que converte o caractere lido no símbolo de Σ
+#                (agrupa caracteres equivalentes, ex.: '1'..'9' -> "NZ")
+# Transição ausente em delta = estado de erro (rejeição imediata).
+
+def rodar_afd(afd, cadeia):
+    """Executa o AFD sobre a cadeia.
+    Retorna (aceito, estado, posicao): o último estado alcançado e a
+    posição do símbolo que não tinha transição (None se a cadeia foi lida
+    até o fim)."""
+    estado = afd["inicial"]
+    for posicao, c in enumerate(cadeia):
+        proximo = afd["delta"].get((estado, afd["classe"](c)))
+        if proximo is None:
+            return False, estado, posicao
+        estado = proximo
+    return estado in afd["aceitacao"], estado, None
+
+
+def executar_afd(afd, cadeia):
+    return rodar_afd(afd, cadeia)[0]
+
 
 # ---------------------------------------------------------------------------
 # 1. ANALISADOR LÉXICO
@@ -25,6 +60,15 @@ OPEN, CLOSE, TEXT, INVALIDO = "OPEN", "CLOSE", "TEXT", "INVALIDO"
 
 LETRAS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 DIGITOS = "0123456789"
+
+# --- nome de tag: uma ou mais letras ---------------------------------------
+# Σ = {L} (L = letra).  INI -L-> NOME -L-> NOME;  F = {NOME}.
+AFD_NOME_TAG = {
+    "delta": {("INI", "L"): "NOME", ("NOME", "L"): "NOME"},
+    "inicial": "INI",
+    "aceitacao": {"NOME"},
+    "classe": lambda c: "L" if c in LETRAS else None,
+}
 
 
 class Token:
@@ -48,6 +92,10 @@ def tokenizar(texto):
     As quebras de linha não importam: o arquivo é lido como uma única
     sequência de símbolos. Espaços entre tags são ignorados, assim como
     a declaração <?xml ...?> e comentários <!-- ... -->.
+
+    Como no XML, não pode haver espaço logo depois de '<' ou '</'
+    (< leitura> e </ leitura> são inválidos), mas pode haver antes do '>'
+    (<leitura > é aceito).
     """
     tokens = []
     i, n = 0, len(texto)
@@ -73,14 +121,12 @@ def tokenizar(texto):
                 tokens.append(Token(INVALIDO, texto[i:ate], i, ate))
                 i = ate
                 continue
-            conteudo = texto[i + 1:fim].strip()
+            conteudo = texto[i + 1:fim].rstrip()
             if conteudo.startswith("/"):
-                nome = conteudo[1:].strip()
-                tipo = CLOSE
+                nome, tipo = conteudo[1:], CLOSE
             else:
-                nome = conteudo
-                tipo = OPEN
-            if nome and all(c in LETRAS for c in nome):
+                nome, tipo = conteudo, OPEN
+            if executar_afd(AFD_NOME_TAG, nome):
                 tokens.append(Token(tipo, nome, i, fim + 1))
             else:
                 tokens.append(Token(INVALIDO, texto[i:fim + 1], i, fim + 1))
@@ -126,62 +172,78 @@ TRANSICOES_ESTRUTURA = {
 }
 ACEITACAO_ESTRUTURA = {"q11"}
 
+CAMPOS = ("sensor", "valor", "unidade")
+
 # Em qual estado cada texto lido pertence a qual campo
 CAMPO_DO_ESTADO = {"q2": "sensor", "q5": "valor", "q8": "unidade"}
 
 
 def validar_estrutura(tokens):
     """Executa o AFD de estrutura.
-    Retorna (aceito, campos) onde campos = {sensor, valor, unidade}."""
+    Retorna (aceito, campos, estado, rejeitado): campos = {campo: token
+    de texto}; estado é onde o AFD parou e rejeitado é o token que não
+    tinha transição (None se o bloco foi lido até o fim)."""
     estado = "q0"
-    campos = {"sensor": "", "valor": "", "unidade": ""}
+    campos = {}
     for token in tokens:
         tipo, valor = token.par()
         simbolo = TEXT if tipo == TEXT else (tipo, valor)
         proximo = TRANSICOES_ESTRUTURA.get((estado, simbolo))
         if proximo is None:
-            return False, None
+            return False, campos, estado, token
         if tipo == TEXT:
-            campos[CAMPO_DO_ESTADO[estado]] = valor
+            campos[CAMPO_DO_ESTADO[estado]] = token
         estado = proximo
-    return estado in ACEITACAO_ESTRUTURA, campos
+    return estado in ACEITACAO_ESTRUTURA, campos, estado, None
+
+
+def esperados_estrutura(estado):
+    """Símbolos que o AFD de estrutura aceitaria a partir do estado."""
+    nomes = []
+    for (origem, simbolo) in TRANSICOES_ESTRUTURA:
+        if origem == estado:
+            if simbolo == TEXT:
+                nomes.append("texto")
+            else:
+                tipo, nome = simbolo
+                nomes.append(f"<{nome}>" if tipo == OPEN else f"</{nome}>")
+    return " ou ".join(nomes)
 
 
 # ---------------------------------------------------------------------------
 # 3. AFDs DOS TIPOS DE DADOS
 # ---------------------------------------------------------------------------
-# Cada AFD é a quíntupla (Q, Σ, δ, q0, F) representada por:
-#   delta     -> dicionário {(estado, símbolo): próximo estado}
-#   inicial   -> q0
-#   aceitacao -> F
-#   classe    -> função que converte o caractere lido no símbolo de Σ
-#                (agrupa caracteres equivalentes, ex.: '1'..'9' -> "NZ")
-# Transição ausente em delta = estado de erro (rejeição imediata).
 
-def executar_afd(afd, cadeia):
-    estado = afd["inicial"]
-    for c in cadeia:
-        estado = afd["delta"].get((estado, afd["classe"](c)))
-        if estado is None:
-            return False
-    return estado in afd["aceitacao"]
-
-
-# --- sensor: texto de tamanho exatamente 7 (letras, dígitos ou '_') --------
-# Σ = {C}, onde C é qualquer letra, dígito ou '_'.
-# Estados 0..7 contam os caracteres lidos; 7 é o único de aceitação.
-# No estado 7 não há transição, então um 8º caractere leva à rejeição.
+# --- sensor: texto de tamanho exatamente 7, com pelo menos uma letra -------
+# Σ = {L, D}, onde L = letra e D = dígito ou '_'.
+# É o AFD produto de dois AFDs: um conta os caracteres lidos (0..7) e o
+# outro lembra se já apareceu alguma letra. O estado "k" significa k
+# caracteres lidos e nenhuma letra ainda; "kL" significa k caracteres
+# lidos e pelo menos uma letra. Só "7L" é de aceitação, então uma cadeia
+# só de dígitos, como "1234567", não é texto e é rejeitada.
+# Nos estados 7 e 7L não há transição: um 8º caractere leva à rejeição.
 
 def classe_sensor(c):
-    return "C" if c in LETRAS or c in DIGITOS or c == "_" else None
+    if c in LETRAS:
+        return "L"
+    if c in DIGITOS or c == "_":
+        return "D"
+    return None
 
 
-AFD_SENSOR = {
-    "delta": {(i, "C"): i + 1 for i in range(7)},
-    "inicial": 0,
-    "aceitacao": {7},
-    "classe": classe_sensor,
-}
+def construir_afd_sensor(tamanho):
+    delta = {}
+    for k in range(tamanho):
+        delta[(str(k), "L")] = f"{k + 1}L"
+        delta[(str(k), "D")] = str(k + 1)
+        if k > 0:                               # o estado 0L não existe
+            delta[(f"{k}L", "L")] = f"{k + 1}L"
+            delta[(f"{k}L", "D")] = f"{k + 1}L"
+    return {"delta": delta, "inicial": "0", "aceitacao": {f"{tamanho}L"},
+            "classe": classe_sensor}
+
+
+AFD_SENSOR = construir_afd_sensor(7)
 
 
 # --- valor: número com até 2 casas decimais e mínimo 0.01 -----------------
@@ -249,6 +311,16 @@ def construir_afd_palavras(palavras):
 
 AFD_UNIDADE = construir_afd_palavras(["CELSIUS", "PERCENTUAL"])
 
+AFD_DO_CAMPO = {"sensor": AFD_SENSOR, "valor": AFD_VALOR,
+                "unidade": AFD_UNIDADE}
+
+# Usado no modo --detalhes para dizer o que o campo deveria conter
+TIPO_ESPERADO = {
+    "sensor": "7 caracteres (letras, dígitos ou _) com pelo menos uma letra",
+    "valor": "número >= 0.01 com até 2 casas decimais",
+    "unidade": "CELSIUS ou PERCENTUAL",
+}
+
 
 def afd_sensor(cadeia):
     return executar_afd(AFD_SENSOR, cadeia)
@@ -262,15 +334,29 @@ def afd_unidade(cadeia):
     return executar_afd(AFD_UNIDADE, cadeia)
 
 
-def validar_tipos(campos):
-    return (afd_sensor(campos["sensor"])
-            and afd_valor(campos["valor"])
-            and afd_unidade(campos["unidade"]))
+def campos_invalidos(valores):
+    """Campos cujo conteúdo é rejeitado pelo AFD do seu tipo."""
+    return [c for c in CAMPOS if not executar_afd(AFD_DO_CAMPO[c], valores[c])]
+
+
+def motivo_tipo(campo, cadeia):
+    """Explica onde o AFD do campo rejeitou a cadeia (modo --detalhes)."""
+    _, estado, posicao = rodar_afd(AFD_DO_CAMPO[campo], cadeia)
+    if posicao is not None:
+        onde = (f"o caractere '{cadeia[posicao]}' (posição {posicao + 1}) "
+                f"não tem transição a partir do estado {estado}")
+    else:
+        onde = f"a cadeia terminou no estado {estado}, que não é de aceitação"
+    return (f"<{campo}>{cadeia}</{campo}>: {onde}; "
+            f"esperado {TIPO_ESPERADO[campo]}.")
 
 
 # ---------------------------------------------------------------------------
 # 4. VALIDADOR DO ARQUIVO
 # ---------------------------------------------------------------------------
+
+RAIZ_ABRE, RAIZ_FECHA = (OPEN, "telemetria"), (CLOSE, "telemetria")
+
 
 def separar_blocos(tokens):
     """Divide a sequência de tokens em blocos candidatos a <leitura>.
@@ -299,36 +385,91 @@ def trecho_original(conteudo, bloco):
     return "".join(parte.strip() for parte in trecho.splitlines())
 
 
-def validar_xml(conteudo):
-    """Retorna a lista de mensagens de erro (vazia = arquivo válido)."""
+def validar_xml(conteudo, detalhes=False):
+    """Retorna a lista de mensagens de erro (vazia = arquivo válido).
+
+    Com detalhes=True, cada erro é seguido de linhas "  -> ..." com a linha
+    do arquivo e o ponto em que o AFD rejeitou a entrada."""
     tokens = tokenizar(conteudo)
     if not tokens:
         return ["Erro: Arquivo xml vazio"]
 
     erros = []
-    inicio, fim = 0, len(tokens)
-    if tokens[0].par() == (OPEN, "telemetria"):
-        inicio = 1
-    else:
-        erros.append("Erro sintático: Elemento <telemetria> não foi aberto.")
 
-    if fim > inicio and tokens[-1].par() == (CLOSE, "telemetria"):
-        fim -= 1
-    else:
-        erros.append("Erro sintático: Elemento <telemetria> não foi fechado.")
+    def erro(mensagem, *motivos):
+        erros.append(mensagem)
+        if detalhes:
+            erros.extend(f"  -> {m}" for m in motivos)
 
-    # Cada bloco entre <telemetria> e </telemetria> é uma leitura,
-    # numerada a partir de 1 (como no exemplo do enunciado).
-    for numero, bloco in enumerate(separar_blocos(tokens[inicio:fim]),
-                                   start=1):
-        texto = trecho_original(conteudo, bloco)
-        aceito, campos = validar_estrutura(bloco)
+    def linha(token):
+        return conteudo.count("\n", 0, token.inicio) + 1
+
+    def trecho(bloco):
+        return trecho_original(conteudo, bloco)
+
+    # --- Elemento raiz: o arquivo deve ser <telemetria> X* </telemetria> ---
+    abre = [i for i, t in enumerate(tokens) if t.par() == RAIZ_ABRE]
+    inicio = abre[0] + 1 if abre else 0
+    fecha = [i for i in range(inicio, len(tokens))
+             if tokens[i].par() == RAIZ_FECHA]
+    fim = fecha[-1] if fecha else len(tokens)
+
+    if not abre:
+        erro("Erro sintático: Elemento <telemetria> não foi aberto.",
+             f"linha {linha(tokens[0])} do arquivo: o arquivo começa com "
+             f"{trecho(tokens[:1])}, e não com <telemetria>.")
+    elif abre[0] > 0:
+        antes = tokens[:abre[0]]
+        erro(f"Erro sintático: Conteúdo fora do elemento <telemetria> em "
+             f"{trecho(antes)}.",
+             f"linha {linha(antes[0])} do arquivo: há conteúdo antes de "
+             f"<telemetria>.")
+
+    conteudo_raiz = []
+    for token in tokens[inicio:fim]:
+        if token.par() in (RAIZ_ABRE, RAIZ_FECHA):
+            erro(f"Erro sintático: Elemento <telemetria> repetido em "
+                 f"{trecho([token])}.",
+                 f"linha {linha(token)} do arquivo: só pode haver um "
+                 f"elemento raiz.")
+        else:
+            conteudo_raiz.append(token)
+
+    if not fecha:
+        erro("Erro sintático: Elemento <telemetria> não foi fechado.",
+             f"linha {linha(tokens[-1])} do arquivo: o arquivo termina com "
+             f"{trecho(tokens[-1:])}, e não com </telemetria>.")
+    elif fim < len(tokens) - 1:
+        depois = tokens[fim + 1:]
+        erro(f"Erro sintático: Conteúdo fora do elemento <telemetria> em "
+             f"{trecho(depois)}.",
+             f"linha {linha(depois[0])} do arquivo: há conteúdo depois de "
+             f"</telemetria>.")
+
+    # --- Leituras: cada bloco é uma leitura, numerada a partir de 1 -------
+    # (como no exemplo do enunciado)
+    for numero, bloco in enumerate(separar_blocos(conteudo_raiz), start=1):
+        prefixo = f"Erro de validação na linha {numero}: "
+        aceito, campos, estado, rejeitado = validar_estrutura(bloco)
         if not aceito:
-            erros.append(f"Erro de validação na linha {numero}: "
-                         f"Estrutura inválida em {texto}.")
-        elif not validar_tipos(campos):
-            erros.append(f"Erro de validação na linha {numero}: "
-                         f"Tipo de dados inválido em {texto}.")
+            if rejeitado is not None:
+                motivo = (f"linha {linha(rejeitado)} do arquivo: o AFD de "
+                          f"estrutura parou no estado {estado} ao ler "
+                          f"{trecho([rejeitado])}; esperado "
+                          f"{esperados_estrutura(estado)}.")
+            else:
+                motivo = (f"linha {linha(bloco[-1])} do arquivo: a leitura "
+                          f"terminou no estado {estado}, que não é de "
+                          f"aceitação; esperado {esperados_estrutura(estado)}.")
+            erro(f"{prefixo}Estrutura inválida em {trecho(bloco)}.", motivo)
+            continue
+
+        valores = {c: campos[c].valor if c in campos else "" for c in CAMPOS}
+        invalidos = campos_invalidos(valores)
+        if invalidos:
+            erro(f"{prefixo}Tipo de dados inválido em {trecho(bloco)}.",
+                 *(f"linha {linha(campos.get(c, bloco[0]))} do arquivo: "
+                   f"{motivo_tipo(c, valores[c])}" for c in invalidos))
     return erros
 
 
@@ -343,22 +484,28 @@ def ler_arquivo(caminho):
         return dados.decode("latin-1")
 
 
+OPCOES_DETALHES = ("-d", "--detalhes")
+
+
 def main():
     # Garante a acentuação correta mesmo quando a saída é redirecionada
     # ou exibida em terminais que não usam a codificação padrão do Windows.
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
 
-    if len(sys.argv) != 2:
-        print("Uso: python validador.py arquivo.xml")
+    argumentos = sys.argv[1:]
+    detalhes = any(a in OPCOES_DETALHES for a in argumentos)
+    arquivos = [a for a in argumentos if a not in OPCOES_DETALHES]
+    if len(arquivos) != 1:
+        print("Uso: python validador.py [--detalhes] arquivo.xml")
         sys.exit(2)
     try:
-        conteudo = ler_arquivo(sys.argv[1])
+        conteudo = ler_arquivo(arquivos[0])
     except OSError as e:
         print(f"Erro: não foi possível abrir o arquivo ({e.strerror}).")
         sys.exit(2)
 
-    erros = validar_xml(conteudo)
+    erros = validar_xml(conteudo, detalhes)
     if erros:
         for e in erros:
             print(e)

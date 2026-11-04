@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?><structure><type>fa</type><automaton>
 <state id="0" name="INI"><x>60</x><y>200</y><initial/></state>
-<state id="1" name="INT_Z"><x>220</x><y>80</y></state>
-<state id="2" name="PONTO_Z"><x>380</x><y>80</y></state>
-<state id="3" name="DEC1_Z"><x>540</x><y>80</y></state>
-<state id="4" name="DEC2_Z"><x>700</x><y>80</y></state>
-<state id="5" name="INT"><x>220</x><y>320</y><final/></state>
-<state id="6" name="PONTO"><x>380</x><y>320</y></state>
-<state id="7" name="DEC1"><x>540</x><y>320</y><final/></state>
-<state id="8" name="DEC2"><x>700</x><y>320</y><final/></state>
+<state id="1" name="INT_Z"><x>200</x><y>90</y></state>
+<state id="2" name="PONTO_Z"><x>390</x><y>90</y></state>
+<state id="3" name="DEC1_Z"><x>580</x><y>90</y></state>
+<state id="4" name="DEC2_Z"><x>770</x><y>90</y></state>
+<state id="5" name="INT"><x>300</x><y>320</y><final/></state>
+<state id="6" name="PONTO"><x>470</x><y>320</y></state>
+<state id="7" name="DEC1"><x>630</x><y>320</y><final/></state>
+<state id="8" name="DEC2"><x>790</x><y>320</y><final/></state>
 <transition><from>0</from><to>1</to><read>z</read></transition>
 <transition><from>0</from><to>5</to><read>n</read></transition>
 <transition><from>1</from><to>1</to><read>z</read></transition>
