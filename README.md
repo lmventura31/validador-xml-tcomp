@@ -7,7 +7,6 @@ O programa valida arquivos XML de telemetria de sensores industriais usando **au
 **Integrantes**
 
 - Jonatas Alexandre Gomes Ribeiro
-- Lucas Barbosa da Rocha
 - Lucas de Melo Ventura
 - Lucas Eduardo
 
